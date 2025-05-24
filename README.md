@@ -1,15 +1,23 @@
 # 🖥️ desktop-detector
 
-A small Windows utility and Node.js wrapper that detects when the desktop becomes the foreground window (i.e., when all applications are minimized). Built in C++ and wrapped for easy use in Node.js.
+A small Windows utility and Node.js wrapper that detects when the desktop becomes the foreground window (i.e., when all applications are minimized).
+
+This version improves detection by distinguishing between a true "Show Desktop" (triggered via Win+D or the taskbar button) and a simple click on the desktop:
+
+* **Show Desktop** is recognized when
+
+  * Any window minimize-start event occurs within a 1-second window before desktop activation (i.e., burst ≥ 1),
+  * Or via the Show Desktop button or Win+D hotkey.
+* **Plain Click** on the desktop is ignored as a Show Desktop, and only logs a simple "shown" state.
 
 ---
 
 ## ⚙️ Features
 
-- Detect when Windows desktop is shown or hidden (based on focus)
-- Exposes a clean JavaScript API for use in Node.js
-- Optional `--quiet` and `--log` CLI flags
-- Useful for desktop automation, screen management, or shell enhancements
+* Detect when Windows desktop is shown or hidden (based on focus)
+* Distinguish "Show Desktop" (key/button) from ordinary clicks
+* Exposes a clean JavaScript API for use in Node.js
+* Optional `--quiet` and `--log` CLI flags
 
 ---
 
@@ -17,7 +25,7 @@ A small Windows utility and Node.js wrapper that detects when the desktop become
 
 ```bash
 npm install desktop-detector
-````
+```
 
 Or clone it:
 
@@ -53,7 +61,7 @@ setTimeout(() => {
 
 ## 🧰 CLI Options
 
-You can also run the binary directly:
+Run the binary directly:
 
 ```bash
 ./bin/detect-desktop.exe [--quiet] [--log] [--help]
@@ -67,14 +75,14 @@ You can also run the binary directly:
 
 ---
 
-
 ## 🧪 Example Output
 
 ```
-Initial state: Desktop is BACKGROUND
-Listening for foreground changes; press Ctrl+C to exit.
-*** Desktop is now FOREGROUND (shown)
-*** Desktop is now BACKGROUND (apps shown)
+[2025-05-24 16:00:00] Initial state: Desktop is BACKGROUND
+[2025-05-24 16:00:00] Listening for Show Desktop; press Ctrl+C to exit.
+[2025-05-24 16:01:10] *** Desktop is now FOREGROUND (Show Desktop)
+[2025-05-24 16:01:12] *** Desktop is now BACKGROUND (apps shown)
+[2025-05-24 16:02:00] *** Desktop is now FOREGROUND (shown)
 ```
 
 ---

@@ -1,6 +1,6 @@
 {
   "name": "desktop-detector",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Detect when Windows desktop is in foreground",
   "main": "index.js",
   "files": [
