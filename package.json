@@ -1,0 +1,21 @@
+{
+  "name": "desktop-detector",
+  "version": "1.0.0",
+  "description": "Detect when Windows desktop is in foreground",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "bin/Release/detect-desktop.exe"
+  ],
+  "keywords": ["desktop", "foreground", "windows", "cpp", "binary", "node"],
+  "author": "nstechbytes",
+  "license": "MIT",
+        "homepage": "https://github.com/NSTechBytes/detect-desktop#readme",
+    "repository": {
+    "type": "git",
+    "url": "https://github.com/NSTechBytes/detect-desktop.git"
+  },
+  "bugs": {
+    "url": "https://github.com/NSTechBytes/detect-desktop/issues"
+  }
+}
