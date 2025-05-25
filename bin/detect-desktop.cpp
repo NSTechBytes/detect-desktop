@@ -16,8 +16,8 @@ bool           g_logEnabled = false;
 std::wofstream g_logFile;
 
 static std::deque<uint64_t> g_minTimes;
-static const uint64_t       MIN_WINDOW_MS = 1000;  
-static const size_t         MIN_COUNT = 1;      
+static const uint64_t       MIN_WINDOW_MS = 500; 
+static const size_t         MIN_COUNT = 1;     
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -53,18 +53,21 @@ std::wstring GetTimestamp() {
 }
 
 void Log(const std::wstring& msg) {
+    std::ios::sync_with_stdio(false);
+
     std::wstring wline = GetTimestamp() + msg;
     std::string line = to_utf8(wline + L"\n");
 
     if (!g_quiet) {
         std::cout << line;
+        std::cout.flush(); 
     }
     if (g_logEnabled && g_logFile.is_open()) {
         g_logFile << wline << L"\n";
+        g_logFile.flush();
     }
 }
 
-// Show usage
 void ShowHelp() {
     std::wcout << L"Usage: detect-desktop.exe [--quiet] [--log] [--help]\n"
         << L"  --quiet   Suppress console output\n"
@@ -122,7 +125,6 @@ void CALLBACK ForegroundChanged(HWINEVENTHOOK, DWORD, HWND hwnd, LONG, LONG, DWO
 // Entry point
 // -----------------------------------------------------------------------------
 int wmain(int argc, wchar_t* argv[]) {
-    // Parse CLI args
     for (int i = 1; i < argc; ++i) {
         std::wstring a = argv[i];
         if (a == L"--quiet")      g_quiet = true;
