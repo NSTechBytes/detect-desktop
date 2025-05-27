@@ -13,16 +13,17 @@ HWINEVENTHOOK g_hMinHook = nullptr;
 bool           g_desktopIsFg = false;
 bool           g_quiet = false;
 bool           g_logEnabled = false;
+bool           g_lastShowDesktop = false; 
+
 std::wofstream g_logFile;
 
 static std::deque<uint64_t> g_minTimes;
-static const uint64_t       MIN_WINDOW_MS = 500; 
-static const size_t         MIN_COUNT = 1;     
+static const uint64_t       MIN_WINDOW_MS = 500;
+static const size_t         MIN_COUNT = 1;
 
 // -----------------------------------------------------------------------------
 // Helpers
 // -----------------------------------------------------------------------------
-
 std::string to_utf8(const std::wstring& wstr) {
     if (wstr.empty()) return std::string();
     int size_needed = WideCharToMultiByte(
@@ -54,13 +55,12 @@ std::wstring GetTimestamp() {
 
 void Log(const std::wstring& msg) {
     std::ios::sync_with_stdio(false);
-
     std::wstring wline = GetTimestamp() + msg;
-    std::string line = to_utf8(wline + L"\n");
+    std::string  line = to_utf8(wline + L"\n");
 
     if (!g_quiet) {
         std::cout << line;
-        std::cout.flush(); 
+        std::cout.flush();
     }
     if (g_logEnabled && g_logFile.is_open()) {
         g_logFile << wline << L"\n";
@@ -91,7 +91,6 @@ BOOL WINAPI ConsoleHandler(DWORD signal) {
 // -----------------------------------------------------------------------------
 // Event callbacks
 // -----------------------------------------------------------------------------
-
 void CALLBACK MinimizeStarted(HWINEVENTHOOK, DWORD, HWND, LONG, LONG, DWORD, DWORD) {
     uint64_t now = GetTickCount64();
     g_minTimes.push_back(now);
@@ -104,17 +103,31 @@ void CALLBACK ForegroundChanged(HWINEVENTHOOK, DWORD, HWND hwnd, LONG, LONG, DWO
     bool nowDesktop = (hwnd == GetShellWindow());
     if (nowDesktop == g_desktopIsFg) return;
 
+    uint64_t now = GetTickCount64();
+    while (!g_minTimes.empty() && now - g_minTimes.front() > MIN_WINDOW_MS) {
+        g_minTimes.pop_front();
+    }
+
     size_t burst = g_minTimes.size();
+
     if (nowDesktop) {
         if (burst >= MIN_COUNT) {
             Log(L"*** Desktop is now FOREGROUND (Show Desktop)");
+            g_lastShowDesktop = true;
         }
         else {
             Log(L"*** Desktop is now FOREGROUND (shown)");
+            g_lastShowDesktop = false;
         }
     }
     else {
-        Log(L"*** Desktop is now BACKGROUND (apps shown)");
+        if (g_lastShowDesktop) {
+            Log(L"*** Desktop is now BACKGROUND (apps restored via desktopMode)");
+        }
+        else {
+            Log(L"*** Desktop is now BACKGROUND (apps shown)");
+        }
+        g_lastShowDesktop = false;
     }
 
     g_desktopIsFg = nowDesktop;
@@ -128,7 +141,7 @@ int wmain(int argc, wchar_t* argv[]) {
     for (int i = 1; i < argc; ++i) {
         std::wstring a = argv[i];
         if (a == L"--quiet")      g_quiet = true;
-        else if (a == L"--log")   g_logEnabled = true;
+        else if (a == L"--log")        g_logEnabled = true;
         else if (a == L"--help") { ShowHelp(); return 0; }
         else {
             std::wcerr << L"Unknown argument: " << a << L"\n";
@@ -175,12 +188,14 @@ int wmain(int argc, wchar_t* argv[]) {
         return 1;
     }
 
+    g_minTimes.clear();
+
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
-
+    
     if (g_hMinHook)        UnhookWinEvent(g_hMinHook);
     if (g_hForegroundHook) UnhookWinEvent(g_hForegroundHook);
     if (g_logFile.is_open()) g_logFile.close();

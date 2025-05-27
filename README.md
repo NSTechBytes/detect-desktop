@@ -4,20 +4,19 @@ A small Windows utility and Node.js wrapper that detects when the desktop become
 
 This version improves detection by distinguishing between a true "Show Desktop" (triggered via Win+D or the taskbar button) and a simple click on the desktop:
 
-* **Show Desktop** is recognized when
-
-  * Any window minimize-start event occurs within a 1-second window before desktop activation (i.e., burst ≥ 1),
-  * Or via the Show Desktop button or Win+D hotkey.
-* **Plain Click** on the desktop is ignored as a Show Desktop, and only logs a simple "shown" state.
+* **Show Desktop** is recognized when:
+    * Any window minimize-start event occurs within a 500-millisecond window before desktop activation (meaning a "burst" of one or more minimization events).
+    * It is triggered via the "Show Desktop" button or the Win+D hotkey.
+* A **plain click** on the desktop is ignored as a "Show Desktop" event and logs only a simple "shown" state.
 
 ---
 
 ## ⚙️ Features
 
-* Detect when Windows desktop is shown or hidden (based on focus)
-* Distinguish "Show Desktop" (key/button) from ordinary clicks
-* Exposes a clean JavaScript API for use in Node.js
-* Optional `--quiet` and `--log` CLI flags
+* Detects when the Windows desktop is shown or hidden (based on focus).
+* Distinguishes "Show Desktop" (via key/button) from ordinary clicks.
+* Exposes a clean JavaScript API for use in Node.js.
+* Optional `--quiet` and `--log` CLI flags for flexible output.
 
 ---
 
@@ -61,17 +60,17 @@ setTimeout(() => {
 
 ## 🧰 CLI Options
 
-Run the binary directly:
+You can also run the binary directly:
 
 ```bash
 ./bin/detect-desktop.exe [--quiet] [--log] [--help]
 ```
 
-| Flag      | Description                         |
-| --------- | ----------------------------------- |
-| `--quiet` | Suppresses console output           |
-| `--log`   | Logs output to `detect-desktop.log` |
-| `--help`  | Displays usage information          |
+| Flag      | Description                               |
+| --------- | ----------------------------------------- |
+| `--quiet` | Suppresses console output                 |
+| `--log`   | Logs output to `detect-desktop.log`       |
+| `--help`  | Displays usage information                |
 
 ---
 
@@ -81,7 +80,7 @@ Run the binary directly:
 [2025-05-24 16:00:00] Initial state: Desktop is BACKGROUND
 [2025-05-24 16:00:00] Listening for Show Desktop; press Ctrl+C to exit.
 [2025-05-24 16:01:10] *** Desktop is now FOREGROUND (Show Desktop)
-[2025-05-24 16:01:12] *** Desktop is now BACKGROUND (apps shown)
+[2025-05-24 16:01:12] *** Desktop is now BACKGROUND (apps restored via desktopMode)
 [2025-05-24 16:02:00] *** Desktop is now FOREGROUND (shown)
 ```
 
